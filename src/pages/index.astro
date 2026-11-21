@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+
+const allArticles = (await getCollection('articles')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const featuredPosts = allArticles.filter((p) => p.data.featured).slice(0, 4);
+const sliderPosts = featuredPosts.length > 0 ? featuredPosts : allArticles.slice(0, 3);
+
+const researchCategories = ['فتاوى', 'نوازل', 'أبحاث', 'قرارات'];
+const tabs = ['الكل', 'فتاوى', 'نوازل', 'أبحاث', 'قرارات'];
+
+const getPostsForTab = (tab: string) => {
+  if (tab === 'الكل') {
+    return allArticles.filter((p) => researchCategories.includes(p.data.category)).slice(0, 5);
+  }
+  return allArticles.filter((p) => p.data.category === tab).slice(0, 5);
+};
+
+const formatDate = (d: Date) => d.toISOString().split('T')[0];
+---
+
+<Layout title="منتدى الفقهاء الليبيين - الرئيسية">
+  <main class="container main-grid">
+
+    <div class="content-column">
+
+      {sliderPosts.length > 0 && (
+        <section class="hero-slider">
+          {sliderPosts.map((post, i) => (
+            <div class={`slide ${i === 0 ? 'active' : ''}`}>
+              <img src={post.data.image || '/images/logo.png'} alt={post.data.title} />
+              <div class="slide-overlay">
+                <span class="slide-badge">{post.data.category}</span>
+                <h2 class="slide-title">
+                  <a href={`/articles/${post.slug}`}>{post.data.title}</a>
+                </h2>
+              </div>
+            </div>
+          ))}
+          <div class="slider-dots">
+            {sliderPosts.map((_, i) => (
+              <button class={`dot ${i === 0 ? 'active' : ''}`} data-slide={i}></button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">أبحاث ودراسات</h2>
+          <div class="section-tabs">
+            {tabs.map((tab, idx) => (
+              <button class={`tab-btn ${idx === 0 ? 'active' : ''}`} data-tab-target={`panel-${idx}`}>
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {tabs.map((tab, idx) => {
+          const posts = getPostsForTab(tab);
+          const lead = posts[0];
+          const rest = posts.slice(1, 5);
+          return (
+            <div id={`panel-${idx}`} class="tab-panel" style={idx === 0 ? '' : 'display:none;'}>
+              {!lead ? (
+                <p style="color:#666; padding:20px 0;">لا توجد منشورات في قسم "{tab}" حالياً.</p>
+              ) : (
+                <>
+                  <article class="featured-article">
+                    <div class="featured-img-wrap">
+                      <a href={`/articles/${lead.slug}`}>
+                        <img src={lead.data.image || '/images/logo.png'} alt={lead.data.title} />
+                      </a>
+                      <span class="cat-badge">{lead.data.category}</span>
+                    </div>
+                    <div class="featured-content">
+                      <div class="article-meta">
+                        <span class="author">{lead.data.author}</span>
+                        <span>{formatDate(lead.data.date)}</span>
+                      </div>
+                      <h3><a href={`/articles/${lead.slug}`}>{lead.data.title}</a></h3>
+                      <p class="featured-excerpt">{lead.data.excerpt || ''}</p>
+                      <a href={`/articles/${lead.slug}`} class="btn-read-more">أكمل القراءة »</a>
+                    </div>
+                  </article>
+
+                  <div class="articles-subgrid">
+                    {rest.map((item) => (
+                      <article class="mini-article">
+                        <div class="mini-thumb">
+                          <a href={`/articles/${item.slug}`}>
+                            <img src={item.data.image || '/images/logo.png'} alt={item.data.title} />
+                          </a>
+                        </div>
+                        <div class="mini-info">
+                          <div class="article-meta">
+                            <span class="author">{item.data.author}</span>
+                            <span>{formatDate(item.data.date)}</span>
+                          </div>
+                          <h4><a href={`/articles/${item.slug}`}>{item.data.title}</a></h4>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+    </div>
+
+    <Sidebar />
+
+  </main>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+
+    function goSlide(index: number) {
+      if (!slides.length) return;
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide]?.classList.remove('active');
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide]?.classList.add('active');
+    }
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => goSlide(Number(dot.getAttribute('data-slide') || 0)));
+    });
+    if (slides.length > 1) setInterval(() => goSlide((currentSlide + 1) % slides.length), 5000);
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach((b) => b.classList.remove('active'));
+        panels.forEach((p) => ((p as HTMLElement).style.display = 'none'));
+        btn.classList.add('active');
+        const target = document.getElementById(btn.getAttribute('data-tab-target') || '');
+        if (target) target.style.display = 'block';
+      });
+    });
+  </script>
+</Layout>

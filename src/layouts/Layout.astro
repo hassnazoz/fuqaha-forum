@@ -1,0 +1,125 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'منتدى الفقهاء الليبيين',
+  description = 'مؤسسة علمية مستقلة تعنى بالدراسات والبحوث الشرعية',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="container">
+      <div class="top-date" id="currentDate">منتدى الفقهاء الليبيين</div>
+      <a href="#contact" class="top-contact-link">✉ اتصل بنا</a>
+    </div>
+  </div>
+
+  <header class="main-header">
+    <div class="container">
+      <a href="/">
+        <img src="/images/logo.png" alt="منتدى الفقهاء الليبيين" class="header-logo" />
+      </a>
+    </div>
+  </header>
+
+  <nav class="main-nav">
+    <div class="container">
+      <ul class="nav-list">
+        <li class="nav-item"><a href="/" class="nav-link">الرئيسية</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link">عن المنتدى</a></li>
+        <li class="nav-item">
+          <a href="/category/أبحاث" class="nav-link">أبحاث ودراسات ▾</a>
+          <div class="dropdown">
+            <a href="/category/فتاوى">فتاوى</a>
+            <a href="/category/نوازل">نوازل</a>
+            <a href="/category/أبحاث">أبحاث</a>
+            <a href="/category/قرارات">قرارات</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="/category/مقالات" class="nav-link">المقالات</a></li>
+        <li class="nav-item"><a href="/#releases" class="nav-link">الإصدارات</a></li>
+        <li class="nav-item"><a href="/#videos" class="nav-link">المرئيات</a></li>
+        <li class="nav-item"><a href="#contact" class="nav-link">اتصل بنا</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <slot />
+
+  <footer class="main-footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3 class="footer-title">عن منتدى الفقهاء الليبيين</h3>
+          <p class="footer-text">
+            مؤسسة علمية مستقلة تعنى بالدراسات والبحوث الشرعية، ومناقشة النوازل المعاصرة وفق المنهج العلمي الوسطي الرصين.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="footer-title">روابط سريعة</h3>
+          <ul class="footer-links">
+            <li><a href="/">• الرئيسية</a></li>
+            <li><a href="/about">• عن المنتدى</a></li>
+            <li><a href="/category/فتاوى">• الفتاوى</a></li>
+            <li><a href="/category/مقالات">• المقالات</a></li>
+            <li><a href="/#releases">• إصدارات المنتدى</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-title">تواصل معنا</h3>
+          <div class="contact-list">
+            <a href="https://wa.me/218910000000" target="_blank" class="contact-item">
+              <span>💬</span>
+              <span>واتساب: +218 91-0000000</span>
+            </a>
+            <a href="mailto:info@fuqaha-ly.org" class="contact-item">
+              <span>✉</span>
+              <span>البريد: info@fuqaha-ly.org</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        جميع الحقوق محفوظة © {new Date().getFullYear()} - منتدى الفقهاء الليبيين
+      </div>
+    </div>
+  </footer>
+
+  <button class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})">▲</button>
+
+  <script>
+    try {
+      const now = new Date();
+      const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      }).format(now);
+      const greg = new Intl.DateTimeFormat('ar-LY', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      }).format(now);
+      const el = document.getElementById('currentDate');
+      if (el) el.textContent = `${hijri} - ${greg}`;
+    } catch (e) {}
+  </script>
+</body>
+</html>

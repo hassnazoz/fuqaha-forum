@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+
+export async function getStaticPaths() {
+  const categories = ['فتاوى', 'نوازل', 'أبحاث', 'قرارات', 'مقالات'];
+  return categories.map((cat) => ({ params: { cat } }));
+}
+
+const { cat } = Astro.params;
+const posts = (await getCollection('articles'))
+  .filter((p) => p.data.category === cat)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const formatDate = (d: Date) => d.toISOString().split('T')[0];
+---
+
+<Layout title={`${cat} - منتدى الفقهاء الليبيين`}>
+  <main class="container main-grid">
+    <div class="content-column">
+      <div class="section-header">
+        <h1 class="section-title">قسم: {cat}</h1>
+      </div>
+
+      {posts.length === 0 ? (
+        <p style="color:#666;">لا توجد منشورات في هذا القسم بعد.</p>
+      ) : (
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+          {posts.map((post) => (
+            <article class="featured-article">
+              <div class="featured-img-wrap">
+                <a href={`/articles/${post.slug}`}>
+                  <img src={post.data.image || '/images/logo.png'} alt={post.data.title} />
+                </a>
+                <span class="cat-badge">{post.data.category}</span>
+              </div>
+              <div class="featured-content">
+                <div class="article-meta">
+                  <span class="author">{post.data.author}</span>
+                  <span>{formatDate(post.data.date)}</span>
+                </div>
+                <h3><a href={`/articles/${post.slug}`}>{post.data.title}</a></h3>
+                <p class="featured-excerpt">{post.data.excerpt || ''}</p>
+                <a href={`/articles/${post.slug}`} class="btn-read-more">أكمل القراءة »</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <Sidebar />
+  </main>
+</Layout>

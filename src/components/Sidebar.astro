@@ -1,0 +1,89 @@
+---
+import { getCollection } from 'astro:content';
+
+const allArticles = (await getCollection('articles')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const sidebarArticles = allArticles.filter((p) => p.data.category === 'مقالات').slice(0, 4);
+
+const releases = (await getCollection('releases'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4);
+
+const videos = (await getCollection('videos'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4);
+
+const formatDate = (d: Date) => d.toISOString().split('T')[0];
+---
+
+<aside class="sidebar-column">
+
+  <!-- 1. المقالات (الأعلى يساراً) -->
+  <div class="sidebar-widget">
+    <div class="widget-header">
+      <h3 class="widget-title">المقالات</h3>
+    </div>
+    <div class="widget-grid">
+      {sidebarArticles.map((post) => (
+        <div class="book-card">
+          <a href={`/articles/${post.slug}`}>
+            <div class="book-cover" style="aspect-ratio: 4 / 3;">
+              <img src={post.data.image || '/images/logo.png'} alt={post.data.title} />
+            </div>
+          </a>
+          <h4 class="book-title">
+            <a href={`/articles/${post.slug}`}>{post.data.title}</a>
+          </h4>
+          <span class="book-date">{formatDate(post.data.date)}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- 2. إصدارات المنتدى (تحت المقالات مباشرة) -->
+  <div class="sidebar-widget" id="releases">
+    <div class="widget-header">
+      <h3 class="widget-title">إصدارات المنتدى</h3>
+    </div>
+    <div class="widget-grid">
+      {releases.map((item) => (
+        <div class="book-card">
+          <a href={item.data.downloadUrl || '#'} target="_blank">
+            <div class="book-cover">
+              <img src={item.data.cover || '/images/logo.png'} alt={item.data.title} />
+            </div>
+          </a>
+          <h4 class="book-title">
+            <a href={item.data.downloadUrl || '#'} target="_blank">{item.data.title}</a>
+          </h4>
+          <span class="book-date">{formatDate(item.data.date)}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- 3. مرئيات -->
+  <div class="sidebar-widget" id="videos">
+    <div class="widget-header">
+      <h3 class="widget-title">مرئيات</h3>
+    </div>
+    <div class="widget-grid">
+      {videos.map((vid) => (
+        <div class="book-card">
+          <a href={vid.data.videoUrl} target="_blank">
+            <div class="video-thumb">
+              <img src={vid.data.thumbnail || '/images/logo.png'} alt={vid.data.title} />
+              <div class="play-icon">▶</div>
+            </div>
+          </a>
+          <h4 class="book-title">
+            <a href={vid.data.videoUrl} target="_blank">{vid.data.title}</a>
+          </h4>
+          <span class="book-date">{formatDate(vid.data.date)}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+</aside>

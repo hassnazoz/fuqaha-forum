@@ -1,0 +1,91 @@
+media:
+  input: public/images/uploads
+  output: /images/uploads
+
+content:
+  - name: articles
+    label: الأبحاث والمقالات
+    type: collection
+    path: src/content/articles
+    filename: "{year}-{month}-{day}-{primary}.md"
+    fields:
+      - name: title
+        label: العنوان
+        type: string
+        required: true
+      - name: author
+        label: اسم الباحث / الكاتب
+        type: string
+        default: هيئة التحرير
+        required: true
+      - name: date
+        label: تاريخ النشر
+        type: date
+        required: true
+      - name: category
+        label: القسم
+        type: select
+        default: أبحاث
+        options:
+          values:
+            - فتاوى
+            - نوازل
+            - أبحاث
+            - قرارات
+            - مقالات
+      - name: featured
+        label: عرض في السلايدر الرئيسي؟
+        type: boolean
+        default: false
+      - name: image
+        label: الصورة الرئيسية
+        type: image
+      - name: excerpt
+        label: مقتطف قصير
+        type: text
+      - name: body
+        label: نص الموضوع (يمكنك إدراج صور هنا)
+        type: rich-text
+
+  - name: releases
+    label: إصدارات المنتدى
+    type: collection
+    path: src/content/releases
+    filename: "{year}-{month}-{day}-{primary}.md"
+    fields:
+      - name: title
+        label: عنوان الإصدار / المجلة
+        type: string
+        required: true
+      - name: date
+        label: تاريخ الإصدار
+        type: date
+        required: true
+      - name: cover
+        label: صورة الغلاف
+        type: image
+      - name: downloadUrl
+        label: رابط التحميل (PDF أو Google Drive)
+        type: string
+
+  - name: videos
+    label: المرئيات
+    type: collection
+    path: src/content/videos
+    filename: "{year}-{month}-{day}-{primary}.md"
+    fields:
+      - name: title
+        label: عنوان الفيديو
+        type: string
+        required: true
+      - name: date
+        label: التاريخ
+        type: date
+        required: true
+      - name: thumbnail
+        label: صورة مصغرة للفيديو
+        type: image
+      - name: videoUrl
+        label: رابط الفيديو (يوتيوب مثلاً)
+        type: string
+        required: true

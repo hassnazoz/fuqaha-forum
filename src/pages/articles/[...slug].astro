@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  return articles.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const formattedDate = entry.data.date.toISOString().split('T')[0];
+---
+
+<Layout title={`${entry.data.title} - منتدى الفقهاء الليبيين`} description={entry.data.excerpt}>
+  <main class="container main-grid">
+
+    <div class="content-column">
+      <article class="article-single">
+        <div class="article-single-header">
+          <a href={`/category/${entry.data.category}`} style="background: var(--gold); color:#fff; padding:3px 12px; border-radius:3px; font-size:12px;">
+            {entry.data.category}
+          </a>
+          <h1 class="article-single-title">{entry.data.title}</h1>
+          <div class="article-meta">
+            <span class="author">بقلم: {entry.data.author}</span>
+            <span>تاريخ النشر: {formattedDate}</span>
+          </div>
+        </div>
+
+        {entry.data.image && (
+          <img src={entry.data.image} alt={entry.data.title} class="article-single-cover" />
+        )}
+
+        <div class="article-body">
+          <Content />
+        </div>
+
+        <section class="comments-section">
+          <h3 class="comments-heading">التعليقات والردود</h3>
+          <p style="font-size:13px; color:#666; margin-bottom:15px;">
+            اكتب اسمك وتعليقك مباشرة (تظهر التعليقات بعد مراجعتها).
+          </p>
+
+          <!-- ضع هنا App ID الخاص بك من موقع cusdis.com -->
+          <div id="cusdis_thread"
+            data-host="https://cusdis.com"
+            data-app-id="YOUR_CUSDIS_APP_ID"
+            data-page-id={entry.slug}
+            data-page-url={Astro.url.href}
+            data-page-title={entry.data.title}
+            data-theme="light"
+          ></div>
+          <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+        </section>
+      </article>
+    </div>
+
+    <Sidebar />
+
+  </main>
+</Layout>
