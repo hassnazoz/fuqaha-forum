@@ -40,22 +40,24 @@ const formattedDate = entry.data.date.toISOString().split('T')[0];
           <Content />
         </div>
 
-        <section class="comments-section">
+        <!-- نظام التعليقات العربي المدمج -->
+        <section class="comments-section" id="commentsBox" data-slug={entry.slug}>
           <h3 class="comments-heading">التعليقات والردود</h3>
-          <p style="font-size:13px; color:#666; margin-bottom:15px;">
-            اكتب اسمك وتعليقك مباشرة (تظهر التعليقات بعد مراجعتها).
-          </p>
 
-          <!-- ضع هنا App ID الخاص بك من موقع cusdis.com -->
-          <div id="cusdis_thread"
-            data-host="https://cusdis.com"
-            data-app-id="YOUR_CUSDIS_APP_ID"
-            data-page-id={entry.slug}
-            data-page-url={Astro.url.href}
-            data-page-title={entry.data.title}
-            data-theme="light"
-          ></div>
-          <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
+          <form id="commentForm" style="display:flex; flex-direction:column; gap:12px; margin-bottom:25px; background:#f9fafb; padding:18px; border:1px solid #e5e7eb; border-radius:4px;">
+            <input type="text" id="cName" placeholder="الاسم الكامل *" required maxlength="60"
+              style="padding:10px; border:1px solid #d1d5db; border-radius:3px; font-family:inherit; font-size:14px;" />
+            <textarea id="cBody" rows="4" placeholder="اكتب تعليقك أو ردك هنا... *" required maxlength="2000"
+              style="padding:10px; border:1px solid #d1d5db; border-radius:3px; font-family:inherit; font-size:14px;"></textarea>
+            <button type="submit" class="btn-read-more" style="border:none; cursor:pointer; width:fit-content; font-family:inherit;">
+              إرسال التعليق
+            </button>
+            <p id="cMsg" style="font-size:13px; color:var(--green); display:none;"></p>
+          </form>
+
+          <div id="commentsList" style="display:flex; flex-direction:column; gap:14px;">
+            <p style="font-size:13px; color:#666;">جاري تحميل التعليقات...</p>
+          </div>
         </section>
       </article>
     </div>
@@ -63,4 +65,77 @@ const formattedDate = entry.data.date.toISOString().split('T')[0];
     <Sidebar />
 
   </main>
+
+  <script>
+    const box = document.getElementById('commentsBox');
+    const slug = box?.getAttribute('data-slug') || '';
+    const listEl = document.getElementById('commentsList');
+    const form = document.getElementById('commentForm') as HTMLFormElement | null;
+    const msgEl = document.getElementById('cMsg');
+
+    async function loadComments() {
+      if (!listEl) return;
+      try {
+        const res = await fetch(`/api/comments?slug=${encodeURIComponent(slug)}`);
+        const data = await res.json();
+        listEl.innerHTML = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+          const p = document.createElement('p');
+          p.style.cssText = 'font-size:13px; color:#666;';
+          p.textContent = 'لا توجد تعليقات بعد. كن أول من يعلق!';
+          listEl.appendChild(p);
+          return;
+        }
+
+        data.forEach((c: { name: string; body: string; created_at: string }) => {
+          const card = document.createElement('div');
+          card.style.cssText = 'border:1px solid #e5e7eb; padding:14px; border-radius:4px; background:#fff;';
+
+          const header = document.createElement('div');
+          header.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;';
+
+          const author = document.createElement('strong');
+          author.style.color = 'var(--green)';
+          author.textContent = c.name;
+
+          const date = document.createElement('span');
+          date.style.color = '#888';
+          date.textContent = (c.created_at || '').slice(0, 10);
+
+          const body = document.createElement('p');
+          body.style.cssText = 'font-size:14px; color:#333; white-space:pre-line;';
+          body.textContent = c.body;
+
+          header.appendChild(author);
+          header.appendChild(date);
+          card.appendChild(header);
+          card.appendChild(body);
+          listEl.appendChild(card);
+        });
+      } catch {
+        listEl.textContent = 'تعذر تحميل التعليقات حالياً.';
+      }
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = (document.getElementById('cName') as HTMLInputElement).value;
+      const body = (document.getElementById('cBody') as HTMLTextAreaElement).value;
+      if (!msgEl) return;
+
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, name, body })
+      });
+      const result = await res.json();
+      msgEl.style.display = 'block';
+      msgEl.style.color = res.ok ? 'var(--green)' : '#dc2626';
+      msgEl.textContent = result.message || result.error;
+      if (res.ok) form.reset();
+    });
+
+    loadComments();
+  </script>
 </Layout>
