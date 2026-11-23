@@ -1,0 +1,110 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="إدارة التعليقات - منتدى الفقهاء الليبيين">
+  <main class="container" style="max-width:850px; margin:40px auto;">
+    <div class="article-single">
+      <h1 class="article-single-title" style="font-size:26px;">إدارة ومراجعة التعليقات</h1>
+
+      <form id="loginForm" style="display:flex; gap:10px; margin-bottom:25px;">
+        <input type="password" id="adminPass" placeholder="أدخل كلمة سر الإدارة (ADMIN_PASS)" required
+          style="flex:1; padding:10px; border:1px solid #ccc; border-radius:3px; font-family:inherit;" />
+        <button type="submit" class="btn-read-more" style="border:none; cursor:pointer; font-family:inherit;">دخول</button>
+      </form>
+
+      <div id="modList" style="display:flex; flex-direction:column; gap:12px;"></div>
+    </div>
+  </main>
+
+  <script>
+    let savedPass = '';
+    const listEl = document.getElementById('modList');
+
+    async function fetchAdminComments() {
+      if (!listEl) return;
+      listEl.innerHTML = '<p style="color:#666;">جاري التحميل...</p>';
+
+      const res = await fetch('/api/comments?mode=admin', {
+        headers: { 'x-admin-pass': savedPass }
+      });
+
+      if (!res.ok) {
+        listEl.innerHTML = '<p style="color:#dc2626;">كلمة السر غير صحيحة.</p>';
+        return;
+      }
+
+      const rows = await res.json();
+      listEl.innerHTML = '';
+      if (rows.length === 0) {
+        listEl.innerHTML = '<p style="color:#666;">لا توجد تعليقات حتى الآن.</p>';
+        return;
+      }
+
+      rows.forEach((c: any) => {
+        const card = document.createElement('div');
+        card.style.cssText = `border:1px solid #ddd; padding:15px; border-radius:4px; background:${c.approved ? '#f0fdf4' : '#fffbeb'};`;
+
+        const top = document.createElement('div');
+        top.style.cssText = 'display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;';
+
+        const authorInfo = document.createElement('strong');
+        authorInfo.textContent = `${c.name} (على: ${c.slug})`;
+
+        const status = document.createElement('span');
+        status.textContent = c.approved ? '✅ منشور' : '⏳ بانتظار الموافقة';
+
+        top.appendChild(authorInfo);
+        top.appendChild(status);
+
+        const txt = document.createElement('p');
+        txt.style.cssText = 'margin-bottom:10px; white-space:pre-line;';
+        txt.textContent = c.body;
+
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex; gap:10px;';
+
+        if (!c.approved) {
+          const btnApprove = document.createElement('button');
+          btnApprove.textContent = 'موافقة ونشر';
+          btnApprove.className = 'btn-read-more';
+          btnApprove.style.cssText = 'border:none; cursor:pointer; background:var(--green); font-family:inherit;';
+          btnApprove.onclick = async () => {
+            await fetch('/api/comments', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'x-admin-pass': savedPass },
+              body: JSON.stringify({ id: c.id })
+            });
+            fetchAdminComments();
+          };
+          actions.appendChild(btnApprove);
+        }
+
+        const btnDel = document.createElement('button');
+        btnDel.textContent = 'حذف';
+        btnDel.className = 'btn-read-more';
+        btnDel.style.cssText = 'border:none; cursor:pointer; background:#dc2626; font-family:inherit;';
+        btnDel.onclick = async () => {
+          await fetch('/api/comments', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'x-admin-pass': savedPass },
+            body: JSON.stringify({ id: c.id })
+          });
+          fetchAdminComments();
+        };
+        actions.appendChild(btnDel);
+
+        card.appendChild(top);
+        card.appendChild(txt);
+        card.appendChild(actions);
+        listEl.appendChild(card);
+      });
+    }
+
+    document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      savedPass = (document.getElementById('adminPass') as HTMLInputElement).value;
+      fetchAdminComments();
+    });
+  </script>
+</Layout>
